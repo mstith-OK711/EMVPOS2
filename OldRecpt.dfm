@@ -1,0 +1,91 @@
+object fmOldReceipt: TfmOldReceipt
+  Left = 219
+  Top = 258
+  Width = 608
+  Height = 226
+  HorzScrollBar.Visible = False
+  VertScrollBar.Visible = False
+  BorderIcons = []
+  Caption = 'Print Prior Receipt'
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clBlack
+  Font.Height = -13
+  Font.Name = 'Arial'
+  Font.Style = [fsBold]
+  KeyPreview = True
+  OldCreateOrder = True
+  Position = poScreenCenter
+  Scaled = False
+  OnClose = FormClose
+  PixelsPerInch = 96
+  TextHeight = 16
+  object lErrMsg: TPanel
+    Left = 8
+    Top = 16
+    Width = 577
+    Height = 41
+    BevelInner = bvLowered
+    BevelWidth = 3
+    Caption = 'Print Prior Receipt ?'
+    Color = clRed
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWhite
+    Font.Height = -19
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 0
+  end
+  object lblYes: TPanel
+    Left = 48
+    Top = 96
+    Width = 161
+    Height = 41
+    BevelWidth = 2
+    Caption = 'Yes'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -21
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 1
+    OnClick = lblYesClick
+  end
+  object lblNo: TPanel
+    Left = 360
+    Top = 96
+    Width = 161
+    Height = 41
+    BevelWidth = 2
+    Caption = 'No'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -21
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    ParentFont = False
+    TabOrder = 2
+    OnClick = lblNoClick
+  end
+  object ElasticForm1: TElasticForm
+    DesignScreenWidth = 1032
+    DesignScreenHeight = 748
+    DesignPixelsPerInch = 96
+    DesignFormWidth = 608
+    DesignFormHeight = 226
+    DesignFormClientWidth = 600
+    DesignFormClientHeight = 192
+    DesignFormLeft = 219
+    DesignFormTop = 258
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clBlack
+    Font.Height = -13
+    Font.Name = 'Arial'
+    Font.Style = [fsBold]
+    Version = 700.000000000000000000
+    Left = 560
+    Top = 160
+  end
+end
