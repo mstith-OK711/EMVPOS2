@@ -1751,8 +1751,6 @@ type
     procedure DisplaySaleDataToPinPad(PP : TPinPadTrans ; SD : pSalesData);
     procedure SendCancelOnDemand(PP : TPinPadTrans);
     procedure SendCardRead(PP : TPinPadTrans);
-    procedure SendSetTransactionType(PP : TPinPadTrans);
-    procedure SendSetAmount(PP : TPinPadTrans);
     property PopUpMsgList : TList read FPopUpMsgList;
     property outFSList : TThreadList read FoutFSList;
     procedure AbortPinPadOperation();
@@ -1851,7 +1849,9 @@ type
     //DSG
 
     CSSuspendList : TRTLCriticalSection;
-
+    OnlineT99Switch : Boolean;
+    OnlinePINVerified : Boolean;
+    EMV_Received_33_03 : Boolean;
     Config : TConfigRW;
     function NullIntToStr(aInt : Integer) : String;
     procedure CreateJsonFromReceiptList();
@@ -1884,7 +1884,7 @@ type
     procedure CreditMsgRecv(Sender : TObject; msg : string);
     procedure ReComputeSaleTotal(bRestrictedOnly : boolean);
     procedure RedisplaySalesItemsToPinPad();
-    procedure PrintEMVDeclinedReceipt();
+    procedure PrintEMVDeclinedReceipt(VERIFIED_PIN : Boolean);
     function FormatFinalizeAuth(const AuthID      : integer;
                                 const FinalAmount : currency;
                                 const TransNo     : integer;
@@ -2024,7 +2024,8 @@ type
     property SavSalesTaxList : TList read FSavSalesTaxList;
     property PostSaleList : TNotList read FPostSaleList;
     property RestrictedDeptList : TList read FRestrictedDeptList;
-    
+    procedure SendSetTransactionType(PP : TPinPadTrans);
+    procedure SendSetAmount(PP : TPinPadTrans);    
   end;
 
 var
@@ -6349,19 +6350,18 @@ begin
     end;
     if lastitemidx > -1 then
       DisplaySaleDataToPinPad(PPTrans, CurSaleList.Items[ lastitemidx ]);
-    SendSetTransactionType(PPTrans);    
-    SendSetAmount(PPTrans);
     nAmount := curSale.nAmountDue;
   end;
   
 end;
 
-procedure TfmPOS.PrintEMVDeclinedReceipt();
+procedure TfmPOS.PrintEMVDeclinedReceipt(VERIFIED_PIN : Boolean);
 var
   ndx : integer;
   sd : pSalesData;
   CCMsg : string;
   idxFirstMediaLine : integer;
+  Pass_VERIFIED_PIN : Boolean;
 begin
     UpdateZLog('fmPOS.PrintEMVDeclinedReceipt() - enter');
     try
@@ -6399,8 +6399,12 @@ begin
         ReceiptList.Add(ReceiptData);
       end;
     end;
-    
-    PrintEMVDecline(0);
+    Pass_VERIFIED_PIN := VERIFIED_PIN;
+    if not Pass_VERIFIED_PIN then
+    begin
+       if OnlinePINVerified then Pass_VERIFIED_PIN := True;
+    end;
+    POSPrt.PrintEMVDecline(0, Pass_VERIFIED_PIN);
     except on E : Exception do
       begin
          UpdateZLog('Exception inside of PrintEMVDeclindedReceipt - ' + E.Message);
@@ -10972,6 +10976,8 @@ begin
     fmPOSMsg.ShowMsg('', 'Resetting Daily Totals...');
     ResetDay;
 
+    //****************** MDS somewhere after this is where EOD is as Dave calls it PUCKING
+
     POSDataMod.IBRptTrans.Commit;
     UpdateZLog('Day Reset, committed transaction');
 
@@ -14864,6 +14870,14 @@ begin
         //SendCancelOnDemand(PPTrans);
         SendSetTransactionType(PPTrans);
         SendSetAmount(PPTrans);
+        PPTrans.CheckSignatureEntry := '';
+        PPTrans.SwipeCheckCount := 0;
+        PPTrans.IsFallbackTransaction := False;
+        PPTrans.InvalidPIN_EnteredCount := 0;
+        //Reset OnlineT99Switch
+        OnlineT99Switch := False;
+        OnlinePINVerified := False;
+        EMV_Received_33_03 := False;
         //SendCardRead(PPTrans);
         fmNBSCCForm.ShowModal;     // main authorization
         //fmNBSCCForm.ResetLabels;
@@ -24543,6 +24557,8 @@ begin
 end;
 
 procedure ExtractVCI(const msg : widestring; const pVCI : pValidCardInfo);
+var
+   Track2Equiv : widestring;
 begin
   ZeroMemory(pVCI, sizeof(TValidCardInfo));
   pVCI.UPC               := 0;
@@ -24563,6 +24579,7 @@ begin
   pVCI.bDebitBINMngt     := TextToBool(GetTagData(TAG_VC_DebitBIN, Msg));
   pVCI.bValid            := TextToBool(GetTagData(TAG_VC_VALID, Msg));
   pVCI.EncryptedTrackData:= GetTagData(TAG_ENCRYPTEDTRACKDATA, Msg);
+  //try Track2Equiv := GetTagData(TAG_EMVT2EQUIV, Msg); pVCI.EncryptedTrackData:= Copy(Track2Equiv,4,Length(Track2Equiv) - 3); except Track2Equiv := ''; end;
   pVCI.mediarestrictioncode := StrToInt64Def(GetTagData(TAG_RESTRICTION_CODE, Msg), MRC_CREDITDEFAULT);
   if (pVCI.bValid) then
   begin
@@ -27849,6 +27866,7 @@ var
   expdate : widestring;
   seqno : integer;    // madhu gv  27-10-2017   check       start
 begin
+//CardInfoReceived('TRACK1','TRACK2','CARDNO','TRACK','ENCRYPTEDTRACKDATA',msg);
  UpdateZLog('inside PPCardInfoReceived function and EMVTags-tarang:'+EMVTags);
  // ShowMessage('inside PPCardInfoReceived function and EMVTags:'+EMVTags); // madhu remove
   expdate := '1249';

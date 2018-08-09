@@ -24,7 +24,7 @@ procedure PrintCardTotals(const q : pHostTotals);
 procedure PrintVisaMCBalance(const qSalesData : pSalesData);
 function PrintEBTBalance(const qSalesData : pSalesData) : boolean;
 procedure PrintEBTDecline(const DeclineAmount : currency);
-procedure PrintEMVDecline(const DeclineAmount : currency);
+procedure PrintEMVDecline(const DeclineAmount : currency; const VERIFIED_PIN : Boolean);
 procedure PrintGiftRestrictionCodeDescription(const RestrictionCode : integer);
 procedure PrintGiftCardBalance(const qGiftCardList : pTList; const Header1 : string; const Header2 : string);
 //XMD
@@ -35,6 +35,7 @@ procedure PrintSeq(ReceiptList : TList = nil);
 procedure PrintDebitReceiptFromReceiptList(ReceiptList : TList);
 procedure PrintFuelOnlyReceiptFromReceiptList(ReceiptList : TList);
 procedure PrintReceiptFromReceiptList(ReceiptList : TList);
+function CheckIfPINVerified(ReceiptList : TList) : boolean;
 function CheckReceiptListForSignatureRequired(ReceiptList : TList) : boolean;
 procedure PrintFailedActivationFromReceiptList(ReceiptList : TList);
 //************** End Used in POSMain
@@ -361,6 +362,50 @@ begin
   end;
 End;
 
+
+function CheckIfPINVerified(ReceiptList : TList) : boolean;
+var
+   rSult : Boolean;
+   i : integer;
+   ReceiptData : pSalesData;
+   rr : TJclStrStrHashMap;
+begin
+   rSult := False;
+
+  if ReceiptList.Count > 0 then
+  begin
+    for i := 0 to ReceiptList.Count-1 do
+    Begin
+      ReceiptData := ReceiptList.Items[i];
+      if ReceiptData^.LineType = 'MED' Then
+      begin
+        if ReceiptData^.PLUModifier in [CREDIT_MEDIA_TYPE, DEBIT_MEDIA_TYPE ] then
+        begin
+           try
+              if ReceiptData^.emvauthconf <> '' then
+              begin
+                rr := ExtractINGTags(ReceiptData^.emvauthconf);
+                try
+                  if rr.ContainsKey(PIN_ENTRY_VERIFIED ) then // might also have to look for TVR as well
+                  begin
+                     rSult := True;
+                  end;
+                finally
+                  rr.Free;
+                end;
+              end;
+           except
+               rSult := False;
+           end;
+        end;
+      end;
+    end;
+  end;
+  if fmPOS.OnlinePINVerified = True then rSult := True;
+  Result := rSult;
+end;
+
+
 function CheckReceiptListForSignatureRequired(ReceiptList : TList) : boolean;
 {
 Check receipt list to see if a credit tender requires a signature line.
@@ -370,6 +415,7 @@ var
   SignatureRequredDollarLimit : currency;
   j : integer;
   ReturnValue : boolean;
+  RReturnValue : boolean;
 begin
   ReturnValue := False;  // initial assumption.
   try
@@ -391,6 +437,10 @@ begin
       end;
     end;
   end;
+  RReturnValue := False;
+  RReturnValue := CheckIfPINVerified(ReceiptList);
+  if (RReturnValue = True) then
+     ReturnValue := False;
   CheckReceiptListForSignatureRequired := ReturnValue;
 end;  // function CheckReceiptListForSignatureRequired
 
@@ -1556,7 +1606,7 @@ end;
 //...53o
 
 
-procedure PrintEMVDecline(const DeclineAmount : currency);
+procedure PrintEMVDecline(const DeclineAmount : currency; const VERIFIED_PIN : Boolean);
 var
   j : integer;
   LenCardNo : integer;
@@ -1583,6 +1633,9 @@ begin
     if (trim(rCRD.sCCPrintLine[j]) <> 'DECLINED') and (trim(rCRD.sCCPrintLine[j]) <> '') then
       PrintLine(rCRD.sCCPrintLine[j]);
   PrintLine('Auth Message: ' + rCRD.sCCAuthMsg);
+  if (VERIFIED_PIN) then
+     PrintLine('PIN Verified');
+  
   PrintSeq();
   UpdateZLog('PrintEMVDeclined - exit');
 end;
@@ -1851,13 +1904,15 @@ var
   n : short;
   x : short;
   j : integer;
-  r : TJclStrStrHashMap;
+  r, rr : TJclStrStrHashMap;
   s, t : string;
   //bpc...
   EndTruncate : short;
   //...bpc
   SigData : WideString;
-
+  EMV_PIN_VERIFIED : Boolean;
+  Save_Sig_Required : Boolean;
+  IsEMVTransaction : Boolean;
   
   function GetPrintableCCMess(aValue : String) : String;
   var
@@ -1915,8 +1970,39 @@ begin
 
   //53o...
 //  if NOT CCSecond and NOT DebitUsed and NOT GiftUsed then
+
+  EMV_PIN_VERIFIED := False;
+  Save_Sig_Required := bSignatureRequired;
+  IsEMVTransaction := False;
+  try
+    if ReceiptData^.emvauthconf <> '' then
+    begin
+      IsEMVTransaction := True;
+      rr := ExtractINGTags(ReceiptData^.emvauthconf);
+      try
+        if rr.ContainsKey(PIN_ENTRY_VERIFIED ) then // might also have to look for TVR as well
+        begin
+           bSignatureRequired := False;
+           EMV_PIN_VERIFIED := True;
+        end;
+      finally
+        rr.Free;
+      end;
+    end;
+    SigData := '';
+  except
+     EMV_PIN_VERIFIED := False;
+     bSignatureRequired := Save_Sig_Required;
+  end;
+  UpdateZLog('Checking fmPOS.OnlinePINVerified');
+  if fmPOS.OnlinePINVerified = True then
+  begin
+     UpdateZLog('fmPOS.OnlinePINVerified = True');
+     bSignatureRequired := False;
+     EMV_PIN_VERIFIED := True;
+  end;
   SigData := GetSignature(CCPtr^.CCAuthId);
-  if NOT CCSecond and NOT DebitUsed and NOT EBTFSUsed and NOT EBTCBUsed and NOT GiftUsed then
+  if NOT CCSecond and NOT DebitUsed and NOT EBTFSUsed and NOT EBTCBUsed and NOT GiftUsed and NOT EMV_PIN_VERIFIED then
   //...53o
     begin
       for n := 1 to 4 do
@@ -1933,7 +2019,10 @@ begin
             AddLine(PRT_SIGING3BA, SigData)
           else
           begin
-            PrintLine('Signature_______________________________');
+            if (not IsEMVTransaction) then
+            begin
+               PrintLine('Signature_______________________________');
+            end;
             PrintLine(Format('AuthID: %d',[CCPtr^.CCAuthId]));
           end;
         end;
@@ -1941,8 +2030,8 @@ begin
       //Build 18
     end;
 
-  if (not bSignatureRequired and (SigData = '')) then
-    PrintLine('No Signature Required');
+  //if (not bSignatureRequired and (SigData = '')) then
+  //  PrintLine('No Signature Required');
 
   //PrintLine(CCPtr^.CCCardName);
 
@@ -1998,14 +2087,16 @@ begin
       end;
       if r.ContainsKey(TRANS_DATA_SOURCE ) then 
       begin
-         PrintLine('Trans Data Souce : ' + GetPrintableCCMess(r.GetValue(TRANS_DATA_SOURCE )));
+         PrintLine('Trans Data Source : ' + GetPrintableCCMess(r.GetValue(TRANS_DATA_SOURCE )));
       end;
 
       if r.ContainsKey(PIN_ENTRY_VERIFIED ) then // might also have to look for TVR as well
       begin
          if (GetPrintableCCMess(r.GetValue(PIN_ENTRY_VERIFIED )) = '1') then
             PrintLine('PIN Verified');
-      end;
+      end
+      else if (EMV_PIN_VERIFIED = True) then PrintLine('PIN Verified');
+      
       if r.ContainsKey(EMV_AL ) then PrintLine('AL : ' + GetPrintableCCMess(r.GetValue(EMV_AL )));
       if r.ContainsKey(EMV_AID) then PrintLine('AID: ' + GetPrintableCCMess(r.GetValue(EMV_AID)));
       if r.ContainsKey(EMV_TVR) then PrintLine('TVR: ' + GetPrintableCCMess(r.GetValue(EMV_TVR)));
