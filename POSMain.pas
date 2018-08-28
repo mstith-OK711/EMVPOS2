@@ -6334,7 +6334,6 @@ begin
    lastitemidx := -1;
   PPTrans.LastSeqNoDisplayed := 999;
   // Let pin pad class know about new sales item and totals (so it can update its display).
-  UpdateZLog('VJ it should be displaying ' + IntToStr(CurSaleList.Count) + ' items');
   if (CurSaleList.Count > 0) then
   begin
     for i := 0 to Pred( CurSaleList.Count ) do
@@ -6345,7 +6344,6 @@ begin
         lastitemidx := i - 1;
         break;
       end;
-      UpdateZLog('Item ' + IntToStr(i) + ' LineType = ' + SD.LineType);
       DisplaySaleDataToPinPad(PPTrans, SD);
     end;
     if lastitemidx > -1 then
@@ -6363,7 +6361,6 @@ var
   idxFirstMediaLine : integer;
   Pass_VERIFIED_PIN : Boolean;
 begin
-    UpdateZLog('fmPOS.PrintEMVDeclinedReceipt() - enter');
     try
     EmptyReceiptList;
 
@@ -6410,7 +6407,6 @@ begin
          UpdateZLog('Exception inside of PrintEMVDeclindedReceipt - ' + E.Message);
       end
     end;
-    UpdateZLog('fmPOS.PrintEMVDeclinedReceipt() - exit');
 end;
 {-----------------------------------------------------------------------------
   Name:      TfmPOS.ReComputeSaleTotal
@@ -9089,9 +9085,6 @@ var
   bForceLoad       : boolean;  //20070405b
   OrigType, OrigVal : string;
 begin
-    UpdateZLog('inside ProcessKey function and key type -tarang');
- //  ShowMessage('inside ProcessKey function and key type :'+sKeyType);  // madhu   remove
-  // sKeyType := 'PPR';   // MADHU GV 27-10-2017   CHECK
   if not ((fmPOSErrorMsg.Handle = GetActiveWindow) and (fmPOSErrorMsg.Caption = 'Card Activation')) then
     if EnforceWindows() then Exit;
   OrigType := sKeyType;
@@ -11614,9 +11607,7 @@ Begin
 
       End;
     End;
-    UpdateZLog('Calling BeginToFinalize : local');
     BeginToFinalize;
-    UpdateZLog('Returned from BeginToFinalize : local');
     For i:= 0 to CurSalelist.Count-1 do
     Begin
       SD := CurSaleList.Items[i];
@@ -14885,10 +14876,6 @@ begin
         // We don't know before calling the ShowModal above what kind of card has been selected, so we always "ask"
         // for the transaction total.  This is incorrect in the case of restricted payment types like EBT and Fleet.
         ShowPartialTender := (fmNBSCCForm.Authorized <> 0)  and (fmNBSCCForm.ChargeAmount <> 0) and (nAmount <> fmNBSCCForm.ChargeAmount);
-        //UpdateZLog('ProcessKeyMED - bCompleteAuth is True, nAmount = %.2f', [nAmount]);
-        UpdateZLog('fmNBSCCForm.Authorized = ' + IntToStr(fmNBSCCForm.Authorized));
-        UpdateZLog('fmNBSCCForm.ChargeAmount = %.2f', [fmNBSCCForm.ChargeAmount]);
-        UpdateZLog('nAmount = %.2f', [nAmount]);
         if ShowPartialTender then
         begin
           if (rCRD.sCCCardType = CT_GIFT) then
@@ -14916,15 +14903,11 @@ begin
             CreateVCI(TempAuthData, rCRD.sCCCardType, rCRD.sCCCardNo, rCRD.sCCExpDate, rCRD.sCCCardName, rCRD.sCCVehicleNo);
             TempAuthData^.AuthID := rCRD.nCCAuthID;
             TempAuthData^.FinalAmount := 0;
-            UpdateZLog('Before : mNBSCCForm.VCIReceived(TempAuthData)-tarang');
-            //ShowMessage('Before : mNBSCCForm.VCIReceived(TempAuthData)'); // madhu  remove
             fmNBSCCForm.VCIReceived(TempAuthData);   //MADHU G V CHECK FOR AUTH
             dispose(TempAuthData);
             fmNBSCCForm.CurrentTransNo := curSale.nTransNo;
             fmNBSCCForm.ChargeAmount := 0;
             fmNBSCCForm.InitialScreen();
-            UpdateZLog('Before1 : mNBSCCForm.ShowModal-tarang');
-         //   ShowMessage('Before1 : mNBSCCForm.ShowModal');  // madhu  remove
 
          
             
@@ -15030,12 +15013,8 @@ begin
     //Gift
     //nCurAmountDue := POSRound(nCurTotal,2);
     //Gift
-    UpdateZLog('BeginToFinalize-tarang');
-   // ShowMessage('BeginToFinalize'); // madhu remove
     BeginToFinalize;
     PoleTL(curSale.nTotal);
-    UpdateZLog('PoleTL(curSale.nTotal)-tarang');
- //   ShowMessage(' PoleTL(curSale.nTotal)'); // madhu remove
   end;
 
   //53o...
@@ -15360,7 +15339,6 @@ begin
          ReceiptJsonObj := ReceiptJsonObj + '"TransactionDate":"' + FormatDateTime('MM/DD/YYYY', Now) + '",';
          ReceiptJsonObj := ReceiptJsonObj + '"TransactionTime":"' + FormatDateTime('HH:MI:SS', Now) + '"';
          ReceiptJsonObj := ReceiptJsonObj + '}';
-         UpdateZLog(ReceiptJsonObj);
          //ReceiptData^
       end;
     except
@@ -15396,8 +15374,6 @@ var
   {$ENDIF}
   
 begin
-  UpdateZLog('inside : FinalizeSale function-tarang');
- // ShowMessage('inside : FinalizeSale function'); // madhu remove
   {$IFDEF FF_PROMO}
   FuelFirstCouponCount := 0;
   FuelFirstCouponAuthID := 0;
@@ -15745,23 +15721,14 @@ begin
     end; // try/except
     LeaveCriticalSection(CSTaxList);  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     //...20041215
-      //ShowMessage('PostSale(PostSaleList)'); // madhu remove
-    UpdateZLog('ProcessKeyMed: PostSale');
     POSPost.PostSale(PostSaleList);
 
-      //ShowMessage('SaveSale(PostSaleList)'); // madhu remove
-    UpdateZLog('ProcessKeyMed: SaveSale');
     Receipt.SaveSale(PostSaleList);
 
-      //ShowMessage('SaveSaleToText(PostSaleList)'); // madhu remove
-    UpdateZLog('ProcessKeyMed: SaveSaleToText');
     Receipt.SaveSaleToText(PostSaleList);
 
-     // ShowMessage('LogSale(PostSaleList)'); // madhu remove
-    UpdateZLog('ProcessKeyMed: LogSale');
     POSLog.LogSale(PostSaleList);
 
-    UpdateZLog('ProcessKeyMed: LogSale done');
 
     DisposeSalesListItems(PostSaleList); // Items on PostSaleList are same as on CurSaleList, so this disposes both.
 
@@ -15789,8 +15756,6 @@ begin
       CCSecond := False;
       if (bSignatureRequired) then
       begin
-      //ShowMessage('PrintReceiptFromReceiptList'); // madhu remove
-      UpdateZLog('PrintReceiptFromReceiptList-tarang');
       PrintReceiptFromReceiptList(ReceiptList);
       end;
       CCSecond := True;
@@ -15879,8 +15844,6 @@ begin
     lbReturn.Visible := False;
 
     nCurMenu := 0;
-    UpdateZLog('DisplayMenu(nCurMenu)-tarang');
-   // ShowMessage('DisplayMenu(nCurMenu)'); // madhu remove
     DisplayMenu(nCurMenu);
     bCaptureNFPLU := False;
     bNeedModifier := False;
@@ -16074,8 +16037,6 @@ var
   i : integer;
   taxname : string;
 begin
-   UpdateZLog(' Inside : BeginToFinalize funciton-tarang');
-  //ShowMessage(' Inside : BeginToFinalize funciton');
   if curSale.bSalesTaxXcpt then
     taxname := 'Sales Tax Exempt'
   else
@@ -21415,8 +21376,6 @@ begin
     CATHelpNoise := FieldByName('PumpHelp').AsInteger;
     Close;
 
-    UpdateZLog('DebitAllowed or GiftCardAllowed or EBTFSAllowed-tarang');
-    //ShowMessage('DebitAllowed or GiftCardAllowed or EBTFSAllowed '); // madhu remove
     SQL.Clear;
     SQL.Add('select * from ccSetup where ccno = (select CreditAuthType from Setup)');
     Open;
@@ -21730,8 +21689,6 @@ begin
 
   InitScreen;
   ClearEntryField;
-   UpdateZLog('before : BuildPOSTouchScreen-tarang');
- // ShowMessage('before : BuildPOSTouchScreen'); // madhu remove
   bLeftHanded := False;
   if bTouchScreen then
     BuildPOSTouchScreen;
@@ -23082,8 +23039,6 @@ var
   nParity  : TParity;
   OPOSName : string;
 begin
- UpdateZLog('inside  TfmPOS.SetupDevice function-tarang');
-  //ShowMessage('inside  TfmPOS.SetupDevice function'); // madhu remove
   if not POSDataMod.IBSetPortQry.Transaction.InTransaction then
     POSDataMod.IBSetPortQry.Transaction.StartTransaction;
   UpdateZLog('TfmPOS.SetupDevice: Starting IBSetPortQry');
@@ -23808,8 +23763,6 @@ procedure TfmPOS.CreditMsgRecv(Sender : TObject; msg : string);
 var
   OutCCData : pCCData;
 begin
-   UpdateZLog(msg);
-  //ShowMessage('inside TfmPOS.CreditMsgRecv function'); // madhu remove
   New(OutCCData);
   OutCCData^.Orig := 'CrdtSrvr';
   OutCCData^.Msg := Msg;
@@ -23942,8 +23895,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TfmPOS.ConnectCreditServer;
 begin
- UpdateZLog('inside TfmPOS.ConnectCreditServer function-tarang');
- //ShowMessage('inside TfmPOS.ConnectCreditServer function'); // madhu remove
   try
     nCreditAuthType := Setup.CreditAuthType ;
   except
@@ -24069,7 +24020,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TfmPOS.ConnectMOServer(reconnect: boolean);
 begin
-  UpdateZLog('TfmPOS.ConnectMOServer-tarang');
   if (ThisTerminalNo = MasterTerminalNo) and (mohost = 'localhost') and not CheckRunning('MOServer.exe') then
     StartProcess('\Latitude\MOServer.exe');
   if not assigned(MOTCPClient) then
@@ -24193,8 +24143,6 @@ var
   sd : pSalesData;
   mr : longword;
 begin
-   UpdateZLog('inside TfmPOS.FormatFinalizeAuth function-tarang');
-  //ShowMessage('inside TfmPOS.FormatFinalizeAuth function'); // madhu remove
   mr := $7fffffff;
   for i := 0 to pred( salelist.Count ) do
   begin
@@ -24223,8 +24171,6 @@ procedure TfmPOS.SendCreditMessage(CreditMsg : string);
 var
   TryCount : integer;
 begin
-  UpdateZLog('inside TfmPOS.SendCreditMessage function-tarang');
-//  ShowMessage('inside TfmPOS.SendCreditMessage function'); // madhu remove
   if NOT bClosingPOS then
   begin
     for TryCount := 1 to 5 do
@@ -24232,10 +24178,7 @@ begin
       try
         if (CreditHostReal(nCreditAuthType)) then
         begin
-           UpdateZLog('Before:Credit.SendMsg(CreditMsg);-tarang');
           Credit.SendMsg(CreditMsg);
-           UpdateZLog('after: Credit.SendMsg(CreditMsg);-tarang');
-        //  ShowMessage('inside TfmPOS.SendCreditMessage function and Credit.SendMsg(CreditMsg);'); // madhu remove
           UpdateZLog('SendCreditMessage - %s', [DeformatCreditMsg(CreditMsg)]);
         end;
         break;
@@ -24686,7 +24629,6 @@ begin
         new(pVCI);
         ExtractVCI(msg, pVCI);
         seqno := StrToInt(GetTagData(TAG_VC_SEQNO, Msg));
-        UpdateZLog('Shesh for Validcard Msg1 ');
         case seqno of
           VC_RET_PPCARDINFORECEIVED : pVCI.cardsource := csPinPad;
           VC_RET_NBSCC_PROCESSKEY   : pVCI.cardsource := csManual;
@@ -24699,7 +24641,6 @@ begin
             POSError('Card not valid at this location', pVCI.CardError)
           else if pVCI.cardsource = csPinPad then
           begin
-            UpdateZLog('Shesh for Validcard Msg2 ');
             AbortPinPadOperation;
             POSError('Card swiped at PINPad not valid', pVCI.CardError);
           end;
@@ -24707,7 +24648,6 @@ begin
             fmNBSCCForm.Close
           else if seqno = VC_RET_GIFT_PROCESSKEY then
             fmGiftForm.Close;
-          UpdateZLog('Shesh for Validcard Msg3 ');
         end
         else
         begin
@@ -24720,7 +24660,6 @@ begin
               end;
           if not alreadyused then
           begin
-            UpdateZLog('Passing VCI to %d', [seqno]);
             case seqno of
               VC_RET_PPCARDINFORECEIVED : if ((Self.SaleState = ssSale) or
                                               ((Self.SaleState = ssTender) and (curSale.nAmountDue <> 0.0))) then
@@ -24747,7 +24686,6 @@ begin
       begin
         if (CreditHostReal(nCreditAuthType)) then
         begin
-          UpdateZLog('Shesh for MSR Auth ');
           if fmGiftForm.Visible then
           begin
             fmGiftForm.ProcessCreditMsg(msg);
@@ -24814,13 +24752,9 @@ procedure TfmPOS.CCSendMsg(const msg : string; const respdest : TMsgRecEvent);
 var
   reqid : Integer;
 begin
-  UpdateZLog('inside TfmPOS.CCSendMsg function-tarang');
-  //ShowMessage('inside TfmPOS.CCSendMsg function'); // madhu remove
   reqid := RandomRange(1, MaxInt);
   CreditDefs.AddObject(IntToStr(reqid), TMsgRecCallMe.Create(respdest));
-  UpdateZLog('SendCreditMessage TAGS = ' + BuildTag('REQID', IntToStr(reqid)) + msg);
   SendCreditMessage(BuildTag('REQID', IntToStr(reqid)) + msg);
-   UpdateZLog('END: TfmPOS.CCSendMsg function-tarang');
 end;
 
 
@@ -25815,8 +25749,6 @@ procedure TfmPos.ProcessCardTotals();
 var
   SaveTitle : string;
 begin
-   UpdateZLog('inside ProcessCardTotals function-tarang');
-  //ShowMessage('inside ProcessCardTotals function'); // madhu remove
   // Send request to activate each card.
   SaveTitle := fmNBSCCForm.Caption;
   fmNBSCCForm.Caption := 'Card totals request.';
@@ -25838,8 +25770,6 @@ begin
   bCardTotalsReceived                 := False;
   CardTotalsDateCode                  := '';
   fmNBSCCForm.ShowModal;    // process card totals
-   UpdateZLog('before : PostMessage(fmNBSCCForm.Handle, WM_INITSCREEN,0 ,0)-tarang');
-  //ShowMessage('before : PostMessage(fmNBSCCForm.Handle, WM_INITSCREEN,0 ,0)'); // madhu remove
   PostMessage(fmNBSCCForm.Handle, WM_INITSCREEN,0 ,0);
 
   if CheckNCRMSR(MSROPOSName) then
@@ -25883,8 +25813,6 @@ function TfmPos.VoidPriorCredit(const VoidTransNo      : integer;
 var
   SaveTitle : string;
 begin
-   UpdateZLog('inside: VoidPriorCredit:-tarang');
-  //ShowMessage('inside: VoidPriorCredit:'); // madhu remove
  if (bSuspendedSale) then
     begin
       POSError('Cannot void credit with outstanding suspended sale.');
@@ -25919,8 +25847,6 @@ begin
   //DSG
   bCardTotalsReceived                 := False;
   CardTotalsDateCode                  := '';
-   UpdateZLog('fmNBSCCForm.ShowModal; void prior credit-tarang');
-  //showmessage('fmNBSCCForm.ShowModal;   // void prior credit');
   fmNBSCCForm.ShowModal;   // void prior credit
   PostMessage(fmNBSCCForm.Handle, WM_INITSCREEN,0 ,0);
   if CheckNCRMSR(MSROPOSName) then
@@ -26257,9 +26183,6 @@ var
   DebitRate : double;
   DebitFee : double;
 begin
-UpdateZLog('inside :DebitBINQualify function-tarang');
-  //ShowMessage('inside :DebitBINQualify function'); // madhu remove
-  //bTryDebit := False;
    bTryDebit := (BINCardType = CT_DEBIT);  // default value   //20040812
   // Attempt to extract the interchange rates from the database to determine the cheaper method (debit vs credit)
   try
@@ -26334,8 +26257,6 @@ var
   {$ENDIF}
   CurSaleData : pSalesData;
 begin
-  UpdateZLog('inside ProcessKeySR2 function-tarang');
-  //ShowMessage('inside ProcessKeySR2 function'); // madhu remove
   if (sEntry <> '') and (CurSaleList.Count <= 0) then
   begin
     if not POSDataMod.IBSuspendTrans.InTransaction then
@@ -26742,8 +26663,6 @@ var
   cCheckAmount : currency;
   {$ENDIF}
 begin
-   UpdateZLog('inside ValidateCardInfo function-tarang');
-  //ShowMessage('inside ValidateCardInfo function'); // madhu remove
   if ((LastValidCardInfo.Track1Data <> qValidCardInfo^.Track1Data) or
       (LastValidCardInfo.Track2Data <> qValidCardInfo^.Track2Data)) then
   begin
@@ -26857,8 +26776,6 @@ begin
     RetCode := True;
   end;
   ValidateCardInfo := RetCode;
-    UpdateZLog('END:  ValidateCardInfo function and RetCode-tarang:'+RetCode);
-    //ShowMessage('END:  ValidateCardInfo function and RetCode'+RetCode); // madhu remove
 
 end;
 {$ENDIF}
@@ -27108,8 +27025,6 @@ var
   qSalesData : pSalesData;
   j : integer;
 begin
-  UpdateZLog('inside ProcessActivation function-tarang');
-  //ShowMessage('inside ProcessActivation function'); // madhu remove
   CCActMsg := '';
   try
     if (Msg.Status <> nil) then
@@ -27180,8 +27095,6 @@ var
   qMinCredit : pSalesData;
   CardReturnAmount : currency;
 begin
-  UpdateZLog('inside BalanceOverTender function-tarang');
-  //ShowMessage('inside BalanceOverTender function'); // madhu remove
   if (SaleState <> ssTender) then
     exit;
 
@@ -27643,8 +27556,6 @@ begin
 end;
 procedure TfmPOS.DisplayEntryKeyPress(Sender: TObject; var Key: Char);
 begin
- UpdateZLog('inside DisplayEntryKeyPress function-tarang');
- //ShowMessage('inside DisplayEntryKeyPress function'); // madhu remove
 //20061114a  {$IFDEF PLU_MOD_DEPT}
   //20060713g...
   if bSaleComplete then         //GMM:  Inits screen upon new keyed entry
@@ -27839,8 +27750,6 @@ begin
     expdate := '06/2026';
     EMVTags  := 'T5A:08:h4761739001010119';
     Track := 2;  }
- // ShowMessage('inside QueryValidCard function'); // madhu remove
- UpdateZLog('inside ueryValidCard function-tarang');
   msg := BuildTag(TAG_MSGTYPE, Format('%2.2d', [CC_VALIDCARD])) +
          BuildTag(TAG_VC_SEQNO, Format('%d', [seqno]));
   if track1 <> '' then
@@ -27867,8 +27776,6 @@ var
   seqno : integer;    // madhu gv  27-10-2017   check       start
 begin
 //CardInfoReceived('TRACK1','TRACK2','CARDNO','TRACK','ENCRYPTEDTRACKDATA',msg);
- UpdateZLog('inside PPCardInfoReceived function and EMVTags-tarang:'+EMVTags);
- // ShowMessage('inside PPCardInfoReceived function and EMVTags:'+EMVTags); // madhu remove
   expdate := '1249';
  { seqno := 1;
     Track2 := ';476173XXXXXX0119=EXPD?';
@@ -27878,8 +27785,6 @@ begin
     Track := 2; }
   // QueryValidCard(1,'', ';476173XXXXXX0119=EXPD?', '560980XXXXXXXX1021', expdate, '2', encryptedtrackdata, 'T5A:08:h4761739001010119');   madhu g v 27-10-2017   check  end
   QueryValidCard(VC_RET_PPCARDINFORECEIVED, Track1, Track2, CardNo, '', Track, EncryptedTrackData, EMVTags);
-  UpdateZLog('After: QueryValidCard function-tarang');
- // ShowMessage('After: QueryValidCard function'); // madhuj remove
 end;
 
 procedure TfmPOS.ActivationVCI(const pVCI : pValidCardInfo);
@@ -27887,8 +27792,6 @@ var
   j : integer;
   qSalesData : pSalesData;
 begin
-  UpdateZLog('Inside: ActivationVCI function-tarang');
-  // ShowMessage('Inside: ActivationVCI function');
   ClearActivationProductData(@ActivationProductData);
   if (convertVCIForActivation(pVCI, @ActivationProductData)) then
   begin
@@ -27939,8 +27842,6 @@ end;
 
 procedure TfmPOS.MSRSwipeVCI(const pVCI : pValidCardInfo);
 begin
-   UpdateZLog('TfmNBSCCForm.ProcessVCI - Sending information to PINPad-tarang');
- // ShowMessage('inside MSRSwipeVCI function'); // madhu remove
   if pVCI.bValid then
   begin
     if fmGiftForm.Visible then
@@ -27991,8 +27892,6 @@ begin
   // (For example, fuel-only gift cards may be valid cards, but if no fuel were purchased, they would
   // not be for this tender.)
 
-  UpdateZLog('inside PPVCIReceived function-tarang');
-  //ShowMessage('inside PPVCIReceived function'); // madhu remove
   detail := '';
   detailmsg := nil;
   if (pVCI.bValid) then
@@ -28012,10 +27911,7 @@ begin
       cpf.Free();
     end;
   end;
-  UpdateZLog('before : PPTrans.HandleValidCardResp(pVCI.CardNo-tarang');                                                                                                  //21-11-2017    MADHU
-  //showmessage('// MADHU CHECK FOR VALID CARD'); // madhu g v
   PPTrans.HandleValidCardResp(pVCI.CardNo, pVCI.CardType, pVCI.bAskDebit, pVCI.bDebitBINMngt, pVCI.bValid);  // MADHU CHECK FOR VALID CARD
-   UpdateZLog('after : PPTrans.HandleValidCardResp(pVCI.CardNo-tarang'); 
   if not pVCI.bValid and (not fmPOSErrorMsg.Visible) then
   begin
     New(ReceiptErrorMsg);
@@ -28047,13 +27943,6 @@ method PINPadAuthResponse() will be called once the results of the authorization
 the credit server.
 }
 begin
-   UpdateZLog('inside (TfmPOS.PPAuthInfoReceived:-tarang');
-  //ShowMessage('inside (TfmPOS.PPAuthInfoReceived: Enter) function'); // madhu remove
-  UpdateZLog('TfmPOS.PPAuthInfoReceived: Enter');
-  if (fmNBSCCForm.Visible = false) then
-  begin
-     UpdateZLog('fmNBSCCForm.Visible is not true');
-  end;
   if fmNBSCCForm.Visible then
   begin
     if ((PinPadAmount = 0.0) and (PinPadMSRData = '')) then
@@ -28069,8 +27958,6 @@ begin
     else
       // Pin Pad ready for authorization attempt.            // madhu gv  27-10-2017    check auth
       fmNBSCCForm.PPAuthInfoReceived(Sender, PinPadAmount, PinPadMSRData, PINBlock, PINSerialNo);
-      UpdateZLog('After: fmNBSCCForm.PPAuthInfoReceived function-tarang');
-      //ShowMessage('After: fmNBSCCForm.PPAuthInfoReceived function'); // madhu remove
   end
   else if fmGiftForm.Visible then
   begin
@@ -28220,8 +28107,6 @@ var
 begin
   // Have clerk verify signature:
   // [Program note: replace fmPOSErrorMsg with signature review form.]
-  //ShowMessage('inside PPSigReceived function'); // madhu remove
-  UpdateZLog('After: inside PPSigReceived function-tarang');
   try
     Sig := TIngSig.Create();
     Sig.PenWidth := 2;
@@ -28246,7 +28131,6 @@ begin
   sigsaved := False;
   if sigaccepted then
   begin
-    UpdateZLog('Signature Accepted : local');
     with POSDataMod.IBTempQuery do
     begin
       try
@@ -28279,15 +28163,12 @@ begin
     // Credit screen would have been closed in NBSCC.pas back when credit response arrived unless
     // a signature was to be captured (now OK to close credit screen).
     //This is also where we are going to call the FinalizeSale as all processes should now be complete :local
-    //UpdateZLog('Finalize Sale :local');
-    //Self.FinalizeSale();
     if (fmNBSCCForm.Visible) then
     begin
       fmNBSCCForm.Close();  // Will cause processing of media to resume
     end;
   end;
   fmNBSCCForm.FormStyle := fsStayOnTop;
-  UpdateZLog('Exit: inside PPSigReceived function-tarang');
   //PPTrans.SendAdRequest(1);
 end;
 
@@ -28298,15 +28179,11 @@ function TfmPOS.PPPromptChange(      Sender         : TObject;
 Update the credit screen so clerk will have an idea about the prompting at the pin pad.
 }
 begin
-  //ShowMessage('inside PPPromptChange function'); // madhu remove
-    UpdateZLog('inside PPPromptChange function-tarang');
 //  if (fmNBSCCForm.CreditAuthToken <> CA_HANDLE_RESPONSE) then  // do no overwrite credit server status
 //    fmNBSCCForm.lPinPadStatus.Caption := ' Pin Pad: ' + Copy(PinPadPrompt, 1, 30);
   Result := True;
   if (FSaleState <> ssNoSale) then
   begin
-      UpdateZLog('fmNBSCCForm.PPPromptChange(sender, pinpadstatusid, pinpadprompt)-tarang');
-    //ShowMessage('fmNBSCCForm.PPPromptChange(sender, pinpadstatusid, pinpadprompt)'); // madhu remove
     //if (fmNBSCCForm.CreditAuthToken <> CA_HANDLE_RESPONSE) then  // do no overwrite credit server status
       fmNBSCCForm.PPPromptChange(sender, pinpadstatusid, pinpadprompt);
 
@@ -28476,8 +28353,6 @@ procedure TfmPOS.PPOnlineChange(Sender : TObject);
 var
   i : integer;
 begin
-   UpdateZLog('inside PPOnlineChange function-tarang');
-  //ShowMessage('inside PPOnlineChange function'); // madhu remove
   if Sender is TPINPadTrans then
     with TPINPadTrans(Sender) do
     begin
@@ -28627,8 +28502,6 @@ end;
 
 procedure TfmPOS.OnPinPadSwipeChange(Sender : TObject);
 begin
-  //ShowMessage('inside (OnPinPadSwipeChange - SwipePending) function'); // madhu remove
-  UpdateZLog('OnPinPadSwipeChange - SwipePending = ' + BoolToStr(TPinPadTrans(Sender).SwipePending, True));
   Self.UpdateCCKeyColor();
 end;
 
@@ -28704,14 +28577,10 @@ var
   pVCI : pValidCardInfo;
 begin
 
-  //ShowMessage('inside ReduceAuth function  and Before finalize auth - ExtPrice'); // madhu remove
-  UpdateZLog('Before finalize auth - ExtPrice = ' + FormatFloat('###,###.00 ;###,###.00-', qSalesData^.ExtPrice));
   New(pVCI);
   ExtractVCIFromSalesList(qSalesData, pVCI);
   pVCI^.FinalAmount := FinalAuthAmount;
   fmNBSCCform.ClearCardInfo();
-  UpdateZLog('Inside : ReduceAuth function and fmNBSCCForm.VCIReceived(pVCI);-tarang');
-//  ShowMessage('Inside : ReduceAuth function and fmNBSCCForm.VCIReceived(pVCI);'); // madhu remove
   fmNBSCCForm.VCIReceived(pVCI);          // MADHU GV CHECK   FOR emv AUTH
   Dispose(pVCI);
   fmNBSCCForm.CurrentTransNo := TransNo;
@@ -28734,8 +28603,6 @@ begin
     UpdateZLog('After finalize auth - ExtPrice = ' + FormatFloat('###,###.00 ;###,###.00-', qSalesData^.ExtPrice));
     moveCRDintoSaleData(@rCRD, qSalesData);
   end;
-  UpdateZLog('End : ReduceAuth function;-tarang');
-  //ShowMessage('End : ReduceAuth function '); // madhu remove
 end;
 
 procedure TfmPOS.SetPolePort(const poleport : TApdComPort);

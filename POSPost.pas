@@ -512,35 +512,26 @@ var
   {$ENDIF}
   PPCur : TIBSQLBuilder;
 begin {PostSale}
-  UpdateZLog('Inside Post Sale : local XXXXXX');
   PPCur := POSDataMod.PosPostCur;
-  UpdateZLog('Inside Post Sale : local XXXXXX1');
   if not POSDataMod.IBDB.TestConnected then
     fmPOS.OpenTables(False);
-  UpdateZLog('Inside Post Sale : local XXXXXX2');
   // Let the pin pad class know that the previous transaction is over.
   try
      if ((fmPOS.PPTrans <> nil)) then
        fmPOS.PPTrans.TransNo := 0;
   except
-     on E : Exception do
-        UpdateZLog('Error Inside Post Sale Setting fmPOS.PPTrans.TransNo := 0 :local');
   end;
-  UpdateZLog('Inside Post Sale : local XXXXXX3');  
   AllocateFuelAcrossMedia(PostSaleList);
   bReTendering := False;  // Assume this is an initial tender for a sale.
 //..bph
-  UpdateZLog('Inside Post Sale : local XXXXXX4');
   if (PostSaleList.Count > 0) then
   for nPostNdx := 0 to (PostSaleList.Count - 1) do
   begin
-    UpdateZLog('Inside Post Sale : local XXXXXX5');
     PostSaleData := PostSaleList.Items[nPostNdx];
     //bph...
 //    if PostSaleData^.LineType = 'FUL' then
     // See if this is a re-tender of a previous sale.  If it is, then only update new
     // media amounts (other amounts are already in database).
-    UpdateZLog('Inside Post Sale : local XXXXXX6');
     if (PostSaleData^.CCRequestType = RT_PURCHASE_REVERSE) then
       begin
         bReTendering := True;
@@ -548,7 +539,6 @@ begin {PostSale}
     else if PostSaleData^.LineType = 'FUL' then
     //...bph
     begin
-      UpdateZLog('Inside Post Sale : local XXXXXX7');
       if (PostSaleData^.SaleType = 'Sale') and (PostSaleData^.LineVoided = False) then
       begin
         fmPOS.SendFuelMessage(PostSaleData^.PumpNo, PMP_PAID, NOAMOUNT, PostSaleData^.FuelSaleID, pstSale.nTransNo, NODESTPUMP );
@@ -556,7 +546,6 @@ begin {PostSale}
     end
     else if PostSaleData^.LineType = 'PPY' then
     begin
-      UpdateZLog('Inside Post Sale : local XXXXXX8');
       if (PostSaleData^.SaleType = 'Sale') and (PostSaleData^.LineVoided = False) then
       begin
         fmPOS.SendFuelMessage(PostSaleData^.PumpNo, PMP_POSPREPAY, PostSaleData^.ExtPrice, NOSALEID, pstSale.nTransNo, NODESTPUMP);
@@ -564,7 +553,6 @@ begin {PostSale}
     end
     else if PostSaleData^.LineType = 'PRF' then
     begin
-      UpdateZLog('Inside Post Sale : local XXXXXX9');
       if (PostSaleData^.SaleType = 'Sale') and (PostSaleData^.LineVoided = False) then
       begin
         fmPOS.SendFuelMessage(PostSaleData^.PumpNo, PMP_PAID, NOAMOUNT, PostSaleData^.FuelSaleID, pstSale.nTransNo, NODESTPUMP);
@@ -572,20 +560,16 @@ begin {PostSale}
     end;
   end;
   RepeatCount := 1;
-  UpdateZLog('Inside Post Sale : local XXXXXX10');
   while True do
   begin
     try
-      UpdateZLog('Inside Post Sale : local XXXXXX11');
       PPCur.StartTransaction;
-      UpdateZLog('Inside Post Sale : local XXXXXX12');
       with PPCur['GetDayId'] do
       begin
         ExecQuery;
         DayId := FieldByName('DayId').AsInteger;
         Close;
       end;
-      UpdateZLog('Inside Post Sale : local XXXXXX13');
       nVoidCount := 0;
       nVoidAmount := 0;
       nRtrnCount := 0;
@@ -595,7 +579,6 @@ begin {PostSale}
       {$ENDIF}
       bFuelItem := False;
       bMdseItem := False;
-      UpdateZLog('Inside Post Sale : local XXXXXX14');
       if (PostSaleList.Count > 0) then
       for nPostNdx := 0 to (PostSaleList.Count - 1) do
       begin
@@ -665,7 +648,6 @@ begin {PostSale}
             Close;
           end;
           {$IFDEF FUEL_PRICE_ROLLBACK}
-          UpdateZLog('Inside Post Sale : local XXXXXX14');
           if PostSaleData^.SaleType = 'Sale' then
           begin
             // If amount for fuel on sales list differs from that from the pump, then
@@ -702,7 +684,6 @@ begin {PostSale}
               end;
             end;
 
-            UpdateZLog('Inside Post Sale : local XXXXXX15');
             // If a discount (or surcharge) is detected, then log it.
             if ((cAmountOnPump > 0.0) and (cAmountOnPump <> PostSaleData^.ExtPrice)) then
             begin
@@ -768,7 +749,6 @@ begin {PostSale}
           end  // if PostSaleData^.SaleType = 'Sale'
           else
           {$ENDIF}
-          UpdateZLog('Inside Post Sale : local XXXXXX16');
           // Update Void and Return Totals
           if PostSaleData^.SaleType = 'Void' then
           begin
@@ -846,7 +826,6 @@ begin {PostSale}
           end;
             // Update PluShift Table
             // 'execute procedure plushiftmerge(:pdayid, :ppluno, :pplumodifier, :pterminalno, :pshiftno, :pprice, :pplumodifiergroup, :pdlycount, :pdlysales, :padjcount, :padjamount)'
-          UpdateZLog('Inside Post Sale : local XXXXXX20');
           with PPCur['PLUShiftMerge'] do
           begin
             ParamByName('pDayId').AsInteger := DayId;
@@ -866,7 +845,6 @@ begin {PostSale}
             close;
           end;
 
-          UpdateZLog('Inside Post Sale : local XXXXXX21');
             //Update Inventory
           with PPCur['PLUInvUpdate'] do
           begin
@@ -875,7 +853,6 @@ begin {PostSale}
             ExecQuery;
             Close;
           end;
-          UpdateZLog('Inside Post Sale : local XXXXXX22');
             // Update DepShift Table
           with PPCur['DepShiftMerge'] do
           begin
@@ -894,7 +871,6 @@ begin {PostSale}
             ExecQuery;
             Close;
           end; {with}
-          UpdateZLog('Inside Post Sale : local XXXXXX23');
           // Update Void and Return Totals
           if PostSaleData^.SaleType = 'Void' then
           begin
@@ -972,9 +948,7 @@ begin {PostSale}
         end;  // PRF
           UpdateZLog(Format('POSPost.PostSale: Done Posting line %d - %s %s',[nPostNdx + 1,PostSaleData^.LineType, PostSaleData^.SaleType]));
       end; {nPostNdx := 0 to (SalesList.Count - 1}
-      UpdateZLog('POSPost.PostSale: done with post loop');
       //bph...
-      UpdateZLog('Inside Post Sale : local XXXXXX24');
       if ((fmPOS.SaleState <> ssBankFuncTender) and (not bReTendering)) then
       //...bph
       begin

@@ -231,7 +231,6 @@ type
     creditresponse : pCreditResponseData;
     FCCSendMsg : TMsgRespRequest;
     FSerialNoChange: TMsgRecEvent;
-
     function BoolToCharInt(Value : boolean) : char;
     procedure PPDevMsgReceived(Sender : TObject; Buffer : pChar; Count : integer);
     procedure PPDevAckReceived(Sender : TObject; msg : pOutboundMessage);
@@ -871,7 +870,6 @@ begin
   // Send the message:
   try
     Self.LastAct := Now();
-    //UpdateZLog('SendMessageToDevice: Pinpad not open or opening "%s" is causing us to try to open', [MsgToSend]);
     PPDev.Send(MsgToSend, expectresponse);
   except
     on e : exception do
@@ -1042,65 +1040,36 @@ begin
 
         if (PinPadMsgType = PINPAD_MSG_ID_OFFLINE) then
         begin
-           UpdateZLog(' before : if ProcessPinPadOffline(qIOMessage) function and qIOMessage: -tarang :');
-          //ShowMessage('if ProcessPinPadOffline(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadOffline(qIOMessage);              // device going off-line
-          UpdateZLog(' After : if ProcessPinPadOffline(qIOMessage) function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_ONLINE) then
         begin
-          UpdateZLog(' before : if ProcessPinPadOnline(qIOMessage) function and qIOMessage: -tarang : Msg="' + qIOMessage^.IOText + '"');
-          //ShowMessage('if ProcessPinPadOnline(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadOnline(qIOMessage);               // response to on-line request
-          UpdateZLog(' before : if ProcessPinPadOnline(qIOMessage) function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_SET_PAYMENT_TYPE)  then
         begin
-          UpdateZLog(' before : if ProcessPinPadSetPaymentType(qIOMessage) function and qIOMessage:-tarang : Msg="' + qIOMessage^.IOText + '"');
-         // ShowMessage('if ProcessPinPadSetPaymentType(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadSetPaymentType(qIOMessage);       // response to setting payment type / amount
-          UpdateZLog(' before :if ProcessPinPadSetPaymentType(qIOMessage) function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_UNIT_DATA) then
         begin
-           UpdateZLog(' before :if ProcessPinPadUnitData(qIOMessage) function and qIOMessage: -tarang : Msg="' + qIOMessage^.IOText + '"');
-          //ShowMessage('if ProcessPinPadUnitData(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadUnitData(qIOMessage);             // response to unit data request
-          UpdateZLog(' After :if ProcessPinPadUnitData(qIOMessage) function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_CARD_STATUS) then
         begin
-         UpdateZLog(' before :if ProcessPinPadCardStatus(qIOMessage)  function and qIOMessage: -tarang : Msg="' + qIOMessage^.IOText + '"');
-           //ShowMessage('if ProcessPinPadCardStatus(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadCardStatus(qIOMessage);
-          UpdateZLog(' After :if ProcessPinPadCardStatus(qIOMessage)  function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_HARD_RESET) then
         begin
-          UpdateZLog(' before :if ProcessPinPadHardReset(qIOMessage)  function and qIOMessage: -tarang  Msg="' + qIOMessage^.IOText + '"');
-           //ShowMessage('if ProcessPinPadHardReset(qIOMessage) function and qIOMessage:'); // madhu remove
           ProcessPinPadHardReset(qIOMessage);            // response to hard reset
-           UpdateZLog(' After :if ProcessPinPadHardReset(qIOMessage)  function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_STATUS_REQUEST) then
         begin
-          UpdateZLog(' before :if ProcessPinPadStatusResponse(qIOMessage) function and qIOMessage: -tarang : Msg="' + qIOMessage^.IOText + '"');
-           //ShowMessage('if ProcessPinPadStatusResponse(qIOMessage) function and qIOMessage:'); // madhu remove
-          //if not(qIOMessage^.IOText ='11.20Get Keypress') then
-         // begin
-           // UpdateZLog(' before -11.20Get Keypress -:if ProcessPinPadStatusResponse(qIOMessage) function and qIOMessage: -tarang:') ;
             ProcessPinPadStatusResponse(qIOMessage);       // response to status request
-         // end;
-          UpdateZLog(' After :if ProcessPinPadStatusResponse(qIOMessage) function and qIOMessage: -tarang :');
-           //ShowMessage('Response to status request: if ProcessPinPadStatusResponse(qIOMessage) function and qIOMessage:'); // madhu remove
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_BIN_LOOKUP) then
         begin
-          UpdateZLog(' before :if ProcessPinPadBINLookup(qIOMessage) function and qIOMessage: -tarang : Msg="' + qIOMessage^.IOText + '"');
-           //ShowMessage('if ProcessPinPadBINLookup(qIOMessage) function and qIOMessage:'); // madhu remove
           CheckSignatureEntry := 'S';
           ProcessPinPadBINLookup(qIOMessage);            // device requesting info on card swiped
-          UpdateZLog(' After :if ProcessPinPadBINLookup(qIOMessage) function and qIOMessage: -tarang :');
         end
         else if (PinPadMsgType = PINPAD_MSG_ID_CARD_READ_REQUEST) then
           ProcessCardReadResponse(qIOMessage)           // tells us what type of transaction (MSR or EMV)
@@ -1476,7 +1445,6 @@ begin
    // we will use FPinPadTrack1 for this
    // if Service Code starts with 2 then it is EMV
    // Will need to see if we already checked because there might be a problem with the chip so proceed with swipe
-   UpdateZLog('Inside CheckIfSwipedIS_EMV : ' + pCode);
    if SwipeCheckCount >= 3 then
    begin
       result := False;
@@ -1496,7 +1464,6 @@ begin
       if (IsThere > 0) then
       begin
          wrkString := Copy(wrkString,IsThere + 1,Length(wrkString));
-         UpdateZLog('Checking for CHIP/PIN CARD : ' + wrkString);
          if (Copy(wrkString,5,1) <> '1') then
          begin
             result := True;
@@ -1557,14 +1524,9 @@ begin
     PassServiceCode := '';
     if Copy(qIOMessage^.IOText,1,3) = '19.' then
     begin
-      UpdateZLog('19.x Message checking for service code ' + qIOMessage^.IOText);
-      //ListBox1.Items.Add(Copy(TempStr,length(TempStr) - 2,3));
-      //ListBox1.Items.Add(Copy(TempStr,1,Length(TempStr) - 4));
       PassServiceCode := Copy(TempStr,Length(TempStr) - 2,3);
       TempStr := Copy(TempStr,1,Length(TempStr) - 4);
     end;
-    UpdateZLog('service code = ' + PassServiceCode);
-    UpdateZLog('TempStr = ' + TempStr);
     if Copy(qIOMessage^.IOText,1,3) = '23.' then
     begin
        TempStr := Copy(qIOMessage^.IOText, 7, Length(qIOMessage^.IOText) - 7 + 1);
@@ -2535,7 +2497,6 @@ procedure TPINPadTransaction.SetPinPadFSAmount(const cAmount : currency);
 begin
   if not Enabled then
     exit;
-  UpdateZLog('PINPadTransaction.SetPinPadFSAmount');
   FPinPadFSAmount := cAmount;
 end;
 
@@ -2807,7 +2768,6 @@ var
   DevMsg : string;
   DevAmount : String;
 begin
-  UpdateZLog('TPINPadTransaction.SendInitialSetAmount Amount = ' + IntToStr(Round(sAmount * 100.0)) + ' :local');
   if (CardTypeField = CARD_TYPE_FIELD_EBT_FS) then
   begin
     PinPadNewSaleItem(LastSeqNoDisplayed, 0.0, 0.0, '', 0.0, sAmount);
@@ -2823,7 +2783,6 @@ procedure TPINPadTransaction.SendSetAmount();
 var
   DevMsg : string;
 begin
-  UpdateZLog('TPINPadTransaction.SendSetAmount Amount = ' + IntToStr(Round(FPinPadAmount * 100.0)) + ' :local');
   if (CardTypeField = CARD_TYPE_FIELD_EBT_FS) then
   begin
     PinPadNewSaleItem(LastSeqNoDisplayed, 0.0, 0.0, '', 0.0, FPinPadAmount);
@@ -2842,7 +2801,6 @@ var
   DevMsg : string;
   TransactionTypeField : string[2];
 begin
-  UpdateZLog('TPINPadTransaction.SendSetTransactionType nCount = ' + IntToStr(nCount) + ' :local');
   case PinPadTransactionType of
     mTransTypeUndef      : begin
       PPDev.LogEvent('SendSetTransactionType - TransType == undef - forcing to sale');
@@ -3052,7 +3010,6 @@ begin
     if (Uppercase(resp.sCCAuthMsg) = 'INVALID ID NBR') then
     begin
        InvalidPIN_EnteredCount := InvalidPIN_EnteredCount + 1;
-       UpdateZLog('Invalid Online PIN Counter = ' + IntToStr(InvalidPIN_EnteredCount));
        // Online PIN Decline
        {if (InvalidPIN_EnteredCount >= 3) then
        begin
@@ -3377,7 +3334,6 @@ procedure TPINPadTransaction.AuthInfoReceived(const PinPadAmount  : currency;
 begin
   if Assigned(FAuthInfoReceived) then
   begin
-    UpdateZLog('Setting FAuthInfoReceived');
     FAuthInfoReceived(Self, PinPadAmount, PinPadMSRData, PINBlock, PINSerialNo);
   end;
 end;
@@ -4348,26 +4304,25 @@ var
   status, pktnum, check_msgnos : integer;
   pkttype : TEMVPacketType;
   extract, msg : string;
+  vs : String;
+  pb : String;
+  ksn : String;
 begin
-  UpdateZLog('ENTER: ProcessPinPadEMVMessage with ' + qIOMessage^.IOText);
   try
     msgnos := Copy(qIOMessage^.IOText, 4, 2);
     if (msgnos = '18') then msgnos := '';  // a 33.18 is equivalent to a 33. where we do not process this message
     //if (msgnos = '07') then nCount := nCount - 1;
     check_msgnos := StrToInt(msgnos);
-    UpdateZLog('ProcessPinPadEMVMessage with msgnos = ' + msgnos);
     try
        status := strtoint(Copy(qIOMessage^.IOText, 7, 2));
     except
        status := 0;
     end;
-    UpdateZLog('ProcessPinPadEMVMessage with status = ' + IntToStr(status));
     pktnum := strtoint(Copy(qIOMessage^.IOText, 9, 1));
-    UpdateZLog('ProcessPinPadEMVMessage with pktnum = ' + IntToStr(pktnum));
     pkttype := TEMVPacketType(strtoint(Copy(qIOMessage^.IOText, 10, 1)));
-    UpdateZLog('ProcessPinPadEMVMessage with pkttype = ' + Copy(qIOMessage^.IOText, 10, 1));
     extract := Copy(qIOMessage^.IOText, 12, length(qIOMessage^.IOText) - 11);
-    UpdateZLog('ProcessPinPadEMVMessage with extract = ' + extract);
+    FPINBLOCK := '';
+    FPINSerialNo := '';
     if status = 0 then
     begin
       if pkttype = ptFirstLast then
@@ -4383,11 +4338,14 @@ begin
         PINPAD_EMV_SUB_TRACKTWOEQUIV : ProcessEMV_TrackTwoEquivalent(msg);   //02
         PINPAD_EMV_SUB_AUTH : begin
                                  SwipeCheckCount := SwipeCheckCount + 1;  // need to do this so that we know they tried an EMV
-                                 UpdateZLog('Checking for T99:24: in extract');
                                  if (POS('T99:24:',extract) > 0) then
                                  begin
-                                     UpdateZLog('NBSCCForm.SetOnlineT99Switch();');
                                      fmNBSCCForm.SetOnlineT99Switch();
+                                     vs := Copy(extract,POS('T99:24:',extract),50);
+                                     pb := Copy(vs,9,16);
+                                     ksn := Copy(vs,25,20);
+                                     FPINBLOCK := pb;
+                                     FPINSerialNo := ksn;
                                  end;
                                  ProcessEMV_Auth(msg);                          //03
                               end;
@@ -4415,7 +4373,7 @@ begin
   begin
      fmNBSCCForm.Visible := true;
   end;
-  AuthInfoReceived(FPinPadAmount, msg, '', '');
+  AuthInfoReceived(FPinPadAmount, msg, FPINBLOCK, FPINSerialNo);
 end;
 
 procedure TPINPadTransaction.ProcessEMV_AuthRespFail(const msg: string);
@@ -4447,17 +4405,11 @@ begin
   p.sEMVauthCFM := msg;
   fmNBSCCform.ProcessEMVAuthCFM(p);
   except
-     on E : Exception do
-       UpdateZLog('Exit ProcessEMV_AuthCFM with error = ' + E.Message + ' : -local ');
   end;
   try
     if Assigned(p) then
        Dispose(p);
   except
-     on E : Exception do
-     begin
-        UpdateZLog('Error disposing of (p) :' + E.Message + ' :local');
-     end;
   end;
 end;
 

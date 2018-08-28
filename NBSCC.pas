@@ -316,7 +316,6 @@ var
   DiscountedAmount : currency;
 begin
   //ShowMessage('inside SendCardAuth function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.SendCardAuth()');
   lStatus.Caption := 'Beginning Credit Auth';
   lStatus.refresh;
 
@@ -432,8 +431,9 @@ begin
       CCMsg := CCMsg + BuildTag(TAG_CARDTYPE, FVCI^.CardType);
   end
   else
+  begin
     CCMsg := CCMsg + BuildTag(TAG_CARDTYPE, FVCI^.CardType);
-
+  end;
   if ((EntryType = 'M') and (FVCI^.CardType = CT_VOYAGER) and (leRestrictionCode.Text <> '')) then
     CCMsg := CCMsg + BuildTag(TAG_RESTRICTION_CODE, leRestrictionCode.Text)
   else if (FVCI^.CardType = CT_GIFT) then
@@ -452,8 +452,6 @@ begin
     AuthTimeOutTimer.Interval := 60000;
     AuthTimeOutTimer.Enabled := True;
   end;
- //ShowMessage('fmPOS.SendCreditMessage(CCMsg);'); // madhu remove
-   UpdateZLog('fmPOS.SendCreditMessage(CCMsg) ' + CCMsg + '-tarang');
   fmPOS.SendCreditMessage(CCMsg);
   FAuthSent := True;
 end;
@@ -463,7 +461,6 @@ var
   CCMsg : widestring;
 begin
   //ShowMessage('inside SendFinalizeAuth function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.SendFinalizeAuth()');
   lStatus.Caption := 'Beginning Finalize Auth';
   CCMsg := fmPOS.FormatFinalizeAuth(authid, finalamount, curSale.nTransNo, fmPOS.CurSaleList);
   Self.lStatus.Visible := True;
@@ -478,7 +475,6 @@ end;
 procedure TfmNBSCCForm.VCIReceived(const pVCI : pValidCardInfo);
 begin
   //ShowMessage('TfmNBSCCForm.VCIReceived function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.VCIReceived - %p', [Self.FVCI]);
   if assigned(Self.FVCI) then
   begin
     if Self.FVCI.CardNo <> pvci.CardNo then
@@ -501,7 +497,6 @@ end;
 procedure TfmNBSCCForm.ClearCardInfo();
 begin
   //showmessage('TfmNBSCCForm.ClearCardInfo();');  // madhu remove
-  UpdateZLog('TfmNBSCCForm.ClearCardInfo');
   ScrubForm;
   if assigned (Self.FVCI) then
   begin
@@ -526,7 +521,6 @@ procedure TfmNBSCCForm.PPAuthInfoReceived(      Sender        : TObject;
 begin
    fmPOS.EMV_Received_33_03 := True;
   //ShowMessage('TfmNBSCCForm.inside PPAuthInfoReceived function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.PPAuthInfoReceived');
   if (PINBlock <> '') and (PINSerialNo <> '') then
     if assigned(FVCI) then
     try
@@ -535,8 +529,6 @@ begin
     except
       on E: Exception do
       begin
-        UpdateZLog('TfmNBSCCForm.ProcessCredit - %s - %s', [E.ClassName, E.Message]);
-        UpdateExceptLog('TfmNBSCCForm.ProcessCredit - %s - %s', [E.ClassName, E.Message]);
         DumpTraceBack(E,5);
       end;
     end;
@@ -552,7 +544,6 @@ begin
           DumpTraceBack(E,5);
         end;
       end;
-       UpdateZLog('inside PPAuthInfoReceived function and call Self.SendCardAuth-tarang');
       //ShowMessage('inside PPAuthInfoReceived function and call Self.SendCardAuth;'); // madhu remove
   Self.SendCardAuth;
 end;
@@ -562,10 +553,8 @@ var
   i : integer;
   f : boolean;
 begin
-    UpdateZLog('inside PPCustomerDataReceived function-tarang');
  //ShowMessage('inside PPCustomerDataReceived function'); // madhu remove
   f := False;
-  UpdateZLog('TfmNBSCCForm.PPCustomerDataReceived - got entrytype %d', [ord(entrytype)]);
   for i := 0 to pred(Self.ControlCount) do
     if (Controls[i].Tag = ord(entrytype)) then
       if Controls[i] is TPOSLabeledEdit then
@@ -615,8 +604,6 @@ var
   cCheckCardType : string;
   {$ENDIF}
 begin
- //ShowMessage('inside TfmNBSCCForm.ProcessKey function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.ProcessKey - sKeyType %s', [sKeyType]);
   {$IFDEF FUEL_PRICE_ROLLBACK}
   // If selecting a payment type (for non-partial tenders), then verify that
   // card type qualifies for the any fuel prices on the sales list.
@@ -875,7 +862,6 @@ begin
     end;
   end
   else RetCode := False;
-  UpdateZLog('TfmNBSCCForm.ValidID Return code: %s', [BoolToStr(Retcode,True)]);
   ValidID := RetCode;
 
 end;
@@ -1022,7 +1008,6 @@ var
   resp : pCreditResponseData;
 begin
   //ShowMessage('inside ProcessCreditMsg function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.ProcessCreditMsg: %s', [DeformatCreditMsg(Msg)]);
   Action :=  StrToIntDef(GetTagData(TAG_MSGTYPE, Msg), 0);
   case Action of
    CC_FINALIZE_AUTH_RESP, CC_AUTHRESP, CC_COLLECTRESP :
@@ -1132,8 +1117,6 @@ var
   skipclose : boolean;
   cvmperf, cvmcond, cvmres : byte;
 begin
-  //ShowMessage('inside ProcessAuthResp function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.ProcessAuthResp - enter');
   AuthTimeOutTimer.Enabled := False;
   Self.FAuthSent := False;
   POSButtonsNBSCC[15].KeyType := '';
@@ -1147,14 +1130,9 @@ begin
 
   lStatus.Caption := 'Auth Code ' + Resp.sCCAuthCode + ' ' + Resp.sCCApprovalCode;
 
-  UpdateZLog(lStatus.Caption);
-  //Uncomment these to force an auth for testing
-  //RespAuthCode := '00';
-  //RespAllowed := '1';
 
   if (nCreditAuthType in [CDTSRV_BUYPASS, CDTSRV_FIFTH_THIRD, CDTSRV_NBS]) then
   begin
-    UpdateZLog('TfmNBSCCForm.ProcessAuthResp - nCreditAuthType: %d', [nCreditAuthType]);
     if (Resp.sCCAllowed = CA_NORMALAUTH) then
     begin
       // approved
@@ -1255,7 +1233,6 @@ begin
   rCRD.semvresp := resp.sEMVresp;
   rCRD.sEMVauthCFM := resp.sEMVauthCFM;
 
-  UpdateZLog('TfmNBSCCForm.ProcessAuthResp - RespAllowed: %s', [Resp.sCCAllowed]);
   
   // Determine if response was successful.
   // Note:  There are two types of credit reversals ("during" and "after").
@@ -1273,7 +1250,6 @@ begin
       ((Resp.sCCAllowed = CA_AUTH_REVERSE))) then
       //...bpd
   begin
-    UpdateZLog('TfmNBSCCForm.ProcessAuthResp - giving POSMain response values');
     rCRD.sCCAuthCode     := Resp.sCCAuthCode;
     rCRD.sCCApprovalCode := Resp.sCCApprovalCode;
     rCRD.sCCCardType     := FVCI^.CardType;
@@ -1298,7 +1274,6 @@ begin
     rCRD.nCCBalance4     := Resp.nCCBalance4;
     rCRD.nCCBalance5     := Resp.nCCBalance5;
     rCRD.nCCBalance6     := Resp.nCCBalance6;
-    UpdateZLog('TfmNBSCCForm.ProcessAuthResp - done with first part of rCRD information');
     //bp...
     rCRD.sCCVehicleNo    := leVehicleNo.Text; //bpwex
     for j := low(Resp.sCCPrintLine) to high(Resp.sCCPrintLine) do
@@ -1322,7 +1297,6 @@ begin
     end;
     rCRD.nCCAuthID := iRespAuthID;
     rCRD.PaidItems := Self.FPayList;
-    UpdateZLog('TfmNBSCCForm.ProcessAuthResp - done with second part of rCRD information');
     Self.FPayList := nil;  // hand off responsibility for this memory to rCRD processor.
     //53o...
      //          if (CardType = CT_DEBIT) and (DebitCashBackAmount > 0) then
@@ -1334,7 +1308,6 @@ begin
     //Gift
     else if (FVCI^.CardType = CT_GIFT) then
     begin
-      UpdateZLog('TfmNBSCCForm.ProcessAuthResp - Adding gift card to used list');
       // Gift card authorizations could be reduced due balance depletion
       // or product restrictions.  The amount could also be increased for
       // cashing out an almost depleted card balance.
@@ -1360,7 +1333,6 @@ begin
     else // if CardType = ...
     begin
       // Check for partial authorization (for example with Visa or MasterCard gift cards with depleted balances).
-      UpdateZLog('TfmNBSCCForm.ProcessAuthResp - Check for partial authorization');
       if (Resp.sCCAuthAmount <> '') then
         ChargeAmount := StrToCurr(Resp.sCCAuthAmount);
     //...20071029a
@@ -1371,7 +1343,6 @@ begin
     Authorized   := 1;
   end;
   // If pin pad configured, then notify it about the authorization response.
-   UpdateZLog('before : if (fmPos.PPTrans <> nil) and fmPos.PPTrans.PinPadOnLine and fmPos.PPtrans.Enabled then-tarang');
  // ShowMessage('before : if (fmPos.PPTrans <> nil) and fmPos.PPTrans.PinPadOnLine and fmPos.PPtrans.Enabled then'); // madhu remove
   if (fmPos.PPTrans <> nil) and fmPos.PPTrans.PinPadOnLine and fmPos.PPtrans.Enabled then
   begin
@@ -1379,8 +1350,6 @@ begin
     begin
       fmPos.PPTrans.PINPadAuthResponse((Authorized = 1), rCRD.nCCAuthID, Resp.sCCApprovalCode, Resp.sCCAuthMsg);
     end;
-    UpdateZLog('After : if (fmPos.PPTrans <> nil) and fmPos.PPTrans.PinPadOnLine and fmPos.PPtrans.Enabled then-tarang');
-      //ShowMessage('After : if (fmPos.PPTrans <> nil) and fmPos.PPTrans.PinPadOnLine and fmPos.PPtrans.Enabled then'); // madhu remove
   end;
   //dmb...
   //close;
@@ -1416,7 +1385,6 @@ begin
           if cvmres = CVMRES_UNK then // pin pad doesn't know if the signature worked, so wait on it from the pinpad
           begin
             //fmPos.PPTrans.SendSignatureRequest('Hey VJ, Sign for this transaction');
-            UpdateZLog('Waiting for Signature from PinPad');
           end;
         end;
         $06..$1d : begin
@@ -1426,7 +1394,6 @@ begin
       else
         close();  // Remaining options are fail and PIN based checks
       end;
-      UpdateZLog('We are going to Free r : local');
       r.Free;
     end;
     if (SwipedCreditNeedsSignature) then
@@ -1464,10 +1431,8 @@ begin
   // Check OnlineT99Switch = True and set OnlinePINVerified
   if (resp.sCCAuthCode = '00') then
   begin
-     UpdateZLog('Card was Authorized so check fmPOS.OnlineT99Switch');
      if fmPOS.OnlineT99Switch = True then
      begin
-        UpdateZLog('OnlineT99Switch was True so set OnlinePINVerified = True');
         fmPOS.OnlinePINVerified := True;  
      end;
   end
@@ -1475,7 +1440,6 @@ begin
      begin
         if (resp.sCCAuthMsg <> 'INVALID ID') then  //It was declined but not because of Invalid PIN
         begin
-            UpdateZLog('OnlineT99Switch was True so set OnlinePINVerified = True');
            fmPOS.OnlinePINVerified := True;  
         end;
      end;
@@ -1540,7 +1504,6 @@ var
        try SCT := GetCardType(StrToInt(FVCI^.CardType)); except SCT := ''; end;
        if (resp.sCCAuthCode = '00') then
        begin
-          UpdateZLog('Sending void for %d - ' + pReason, [resp.nCCAuthID]);
           msg := BuildTag(TAG_MSGTYPE, IntToStr(CC_VOID)) +
                  BuildTag(TAG_CARDTYPE, FVCI^.CardType) +
                  BuildTag(TAG_AUTHID, IntToStr(resp.nCCAuthID)) +
@@ -1557,12 +1520,8 @@ var
              if (fmPOS.EMV_Received_33_03 = False) and (assigned(Self.FVCI)) and (SCT <> '')then
              begin
                 T2E := FVCI^.CardNo + '=' + Copy(FVCI^.ExpDate,3,2) + Copy(FVCI^.ExpDate,1,2);
-                UpdateZLog('Sending void for VOID54');
-                //msg54 :=   'A' + FS_CHAR +  SCT + FS_CHAR + '54' + FS_CHAR + FVCI^.CardType + FS_CHAR + '0' + FS_CHAR + '0' + FS_CHAR +  'S' + FS_CHAR + '2C' + FS_CHAR + T2E + FS_CHAR +
-                //         TrimRight(FormatFloat('###,###.00 ;###,###.00-',fmPOS.PPTrans.PinPadAmount)) + FS_CHAR + '' + FS_CHAR + '' + FS_CHAR;
                 msg54 :=   'A' + FS_CHAR + copy(IntToStr(reqid),2,4) + FS_CHAR + '54' + FS_CHAR + SCT + FS_CHAR + '0' + FS_CHAR + '0' + FS_CHAR +  'S' + FS_CHAR + '2C' + FS_CHAR + T2E + FS_CHAR +
                          TrimRight(FormatFloat('###,###.00 ;###,###.00-',fmPOS.PPTrans.PinPadAmount)) + FS_CHAR + '' + FS_CHAR + '' + FS_CHAR;
-                UpdateZLog('msg54 = ' + msg54);
                 msg := BuildTag(TAG_MSGTYPE, IntToStr(CC_VOID54)) +
                        BuildTag(TAG_CARDTYPE, FVCI^.CardType) +
                        BuildTag(TAG_CCHOST, '3') +
@@ -1585,8 +1544,6 @@ begin
 
 
   
-  UpdateZLog('inside  TfmNBSCCForm.ProcessEMV_AuthCFM function-tarang');
-  UpdateZLog('Here is the data it is going to try and Extract : ' + resp.sEMVauthCFM);
  // ShowMessage('inside  TfmNBSCCForm.ProcessEMV_AuthCFM function'); // madhu remove
   k := resp.sEMVauthCFM;
   if Copy(k,length(k) - 1,1) <> cFS then
@@ -1595,10 +1552,7 @@ begin
   respcode := r.GetValue(ING_CNF_RESPCODE);
   EMV_ERROR_CODE := r.GetValue('D1010');
   EMV_ERROR_CODE := copy(EMV_ERROR_CODE,2,Length(EMV_ERROR_CODE) - 1);
-  UpdateZLog('EMV Confirmation response %s', [respcode[2]]);
-  UpdateZLog('EMV ERROR CODE  %s', [EMV_ERROR_CODE]);
   r.Destroy();
-  UpdateZLog('inside  TfmNBSCCForm.ProcessEMV_AuthCFM function and -tarang - respcode[2]:'+respcode[2] + ' and the sCCAuthCode = ' + resp.sCCAuthCode);
 //  ShowMessage('inside  TfmNBSCCForm.ProcessEMV_AuthCFM function and respcode[2]:'+respcode[2]); // madhu remove
 
 // CDIV  with E
@@ -1733,9 +1687,7 @@ begin
   else
   if (respcode[2] = 'A') or (respcode[2] = 'C') or (resp.sCCAuthCode <> '00') then
   begin
-    UpdateZLog('BEfore ProcessAuthResp(resp);-tarang');
     ProcessAuthResp(resp);
-    UpdateZLog('After ProcessAuthResp(resp);-tarang');
   end
   else
   begin
@@ -1758,50 +1710,46 @@ var
 
 begin
   //ShowMessage('inside ProcessAuthResp function'); // madhu remove
-  UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - enter');
   
   try
     AuthTimeOutTimer.Enabled := False;
-    UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 1');
-    Self.FAuthSent := False; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 2');
-    rCRD.semvresp := resp.sEMVresp; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 3');
-    rCRD.sEMVauthCFM := resp.sEMVauthCFM; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 4');
-    rCRD.sCCAuthCode     := Resp.sCCAuthCode; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 5');
-    rCRD.sCCApprovalCode := Resp.sCCApprovalCode; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 6');
-    rCRD.sCCCardType     := FVCI^.CardType; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 7');
-    rCRD.sCCCardNo       := FVCI^.CardNo; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 8');
-    rCRD.sCCExpDate      := FVCI^.ExpDate; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 9');
-    rCRD.sCCCardName     := FVCI^.CardName; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 10');
-    rCRD.sCCBatchNo      := Resp.sCCBatchNo; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 11');
-    rCRD.sCCSeqNo        := Resp.sCCSeqNo; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 12');
-    rCRD.sCCEntryType    := EntryType; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 13');
-    rCRD.sCCOdometer     := leOdometer.Text; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 14');
-    rCRD.sCCVehicleNo    := leVehicleNo.Text; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 15');
-    rCRD.sCCCPSData      := Resp.sCCCPSData; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 16');
-    rCRD.sCCTime         := Resp.sCCTime; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 17');
-    rCRD.sCCDate         := Resp.sCCDate; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 18');
-    rCRD.sCCRetrievalRef := Resp.sCCRetrievalRef; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 19');
-    rCRD.sCCAuthNetID    := Resp.sCCAuthNetID; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 20');
-    rCRD.sCCTraceAuditNo := Resp.sCCTraceAuditNo; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 21');
-    rCRD.sCCAuthorizer   := Resp.sCCAuthorizer; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 22');
-    rCRD.nCCBalance1     := Resp.nCCBalance1; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 23');
-    rCRD.nCCBalance2     := Resp.nCCBalance2; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 24');
-    rCRD.nCCBalance3     := Resp.nCCBalance3; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 25');
-    rCRD.nCCBalance4     := Resp.nCCBalance4; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 26');
-    rCRD.nCCBalance5     := Resp.nCCBalance5; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 27');
-    rCRD.nCCBalance6     := Resp.nCCBalance6; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 28');
-    rCRD.sCCVehicleNo    := leVehicleNo.Text; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 29');
+    Self.FAuthSent := False;
+    rCRD.semvresp := resp.sEMVresp;
+    rCRD.sEMVauthCFM := resp.sEMVauthCFM;
+    rCRD.sCCAuthCode     := Resp.sCCAuthCode;
+    rCRD.sCCApprovalCode := Resp.sCCApprovalCode;
+    rCRD.sCCCardType     := FVCI^.CardType;
+    rCRD.sCCCardNo       := FVCI^.CardNo;
+    rCRD.sCCExpDate      := FVCI^.ExpDate;
+    rCRD.sCCCardName     := FVCI^.CardName;
+    rCRD.sCCBatchNo      := Resp.sCCBatchNo;
+    rCRD.sCCSeqNo        := Resp.sCCSeqNo;
+    rCRD.sCCEntryType    := EntryType;
+    rCRD.sCCOdometer     := leOdometer.Text;
+    rCRD.sCCVehicleNo    := leVehicleNo.Text;
+    rCRD.sCCCPSData      := Resp.sCCCPSData;
+    rCRD.sCCTime         := Resp.sCCTime;
+    rCRD.sCCDate         := Resp.sCCDate;
+    rCRD.sCCRetrievalRef := Resp.sCCRetrievalRef;
+    rCRD.sCCAuthNetID    := Resp.sCCAuthNetID;
+    rCRD.sCCTraceAuditNo := Resp.sCCTraceAuditNo;
+    rCRD.sCCAuthorizer   := Resp.sCCAuthorizer;
+    rCRD.nCCBalance1     := Resp.nCCBalance1;
+    rCRD.nCCBalance2     := Resp.nCCBalance2;
+    rCRD.nCCBalance3     := Resp.nCCBalance3;
+    rCRD.nCCBalance4     := Resp.nCCBalance4;
+    rCRD.nCCBalance5     := Resp.nCCBalance5;
+    rCRD.nCCBalance6     := Resp.nCCBalance6;
+    rCRD.sCCVehicleNo    := leVehicleNo.Text;
     for j := low(Resp.sCCPrintLine) to high(Resp.sCCPrintLine) do 
       rCRD.sCCPrintLine[j] := Resp.sCCPrintLine[j];
-    rCRD.sCCAuthMsg      := Resp.sCCAuthMsg; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 30');
-    rCRD.nCCRequestType := Resp.nCCRequestType; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 31');
-    rCRD.nCCAuthID := iRespAuthID; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 32');
-    rCRD.PaidItems := Self.FPayList; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 33');
-    rCRD.nChargeAmount := ChargeAmount; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 34');
-    rCRD.mediarestrictioncode := FVCI^.mediarestrictioncode; UpdateZLog('TfmNBSCCForm.ProcessEMVDecline - 35');
-    UpdateZLog('CALL fmPOS.PrintEMVDeclinedReceipt()');
+    rCRD.sCCAuthMsg      := Resp.sCCAuthMsg;
+    rCRD.nCCRequestType := Resp.nCCRequestType;
+    rCRD.nCCAuthID := iRespAuthID;
+    rCRD.PaidItems := Self.FPayList;
+    rCRD.nChargeAmount := ChargeAmount;
+    rCRD.mediarestrictioncode := FVCI^.mediarestrictioncode;
     // Now I should be able to print the receipt
-    //emvauthconf
     IsVerifiedPIN := False;
     if (resp.sEMVauthCFM <> '') then
     begin
@@ -1875,7 +1823,6 @@ var
   r : pSalesSummaryData;
   cpflist, ssdlist : TList;
 begin
-  UpdateZLog('TfmNBSCCForm.FormatSalesData  AuthID: %d  mr: %08x', [ authid, mr ]);
   tmpdpt := 0;
   if authid = CC_AUTHID_UNKNOWN then
     cpflist := CanPayFor(mr, salelist)
@@ -2094,7 +2041,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TfmNBSCCForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  UpdateZLog('TfmNBSCCForm.FormClose');
   ClearCardInfo;
   if assigned(fmPOS.PPTrans) and (fmPOS.PPTrans.Enabled) and (fmPOS.PPTrans.PinPadOnLine) then
   begin
@@ -2614,21 +2560,14 @@ begin
         fmPOS.PPTrans.GetVehicleNo;
       end;
     end;
-     UpdateZLog(' if c then -tarang');
-    //ShowMessage(' if c then'); // madhu remove
     if c then
     begin
-     //fmPos.PPTrans := NIL; // MADHU GV 27-10-2017    CHECK REMOVE
-      //  ShowMessage(' fmPos.PPTrans <> nil');   // madhu remove
-        UpdateZLog('fmPos.PPTrans <> nil -tarang');
       if (fmPos.PPTrans <> nil) then
       begin
-        UpdateZLog('fmPos.PPTrans.PINPadAmount := fmNBSCCForm.ChargeAmount -tarang');
         fmPos.PPTrans.PINPadAmount := fmNBSCCForm.ChargeAmount
       end
       else
       begin
-        UpdateZLog('SendCardAuth : local');
         SendCardAuth;
       end;
     end
@@ -2704,7 +2643,6 @@ begin
     begin
       if assigned(fmPOS.PPTrans) and fmPOS.PPTrans.PinPadOnLine and fmPOS.PPTrans.Enabled then
       begin
-        UpdateZLog('TfmNBSCCForm.ProcessVCI - Sending information to PINPad');
         fmPOS.PPTrans.PinPadAccount := FVCI^.CardNo;
         if FVCI^.ExpDate = '' then
           FVCI^.ExpDate := '1249';
@@ -2714,9 +2652,7 @@ begin
     end
     else if Self.Visible then       // madhu gv 27-10-2017  check remove
     begin
-      UpdateZLog('before: Self.CheckEntries();-tarang');
       Self.CheckEntries();
-      UpdateZLog('before: Self.CheckEntries();-tarang');
     end;
   SwipedCreditNeedsSignature := False;
     // Check For EMV Card Swiped to Set Signature Required if CardType = "05"
@@ -2726,8 +2662,6 @@ begin
   begin
      SwipedCreditNeedsSignature := True;
   end;
-     UpdateZLog('END: ProcessVCI function-tarang');
-  // ShowMessage('END: ProcessVCI function'); // madhu remove
 end;
 
 {-----------------------------------------------------------------------------
@@ -2740,7 +2674,6 @@ end;
 -----------------------------------------------------------------------------}
 procedure TfmNBSCCForm.FormShow(Sender: TObject);
 begin
-  UpdateZLog('TfmNBSCCForm.FormShow');
   ResetLabels;
   
 end;
@@ -2868,17 +2801,11 @@ end;
 
 procedure TfmNBSCCForm.FormActivate(Sender: TObject);
 begin
-  //showmessage('if assigned(Self.FVCI) then-before'); // madhu gv remove
-  UpdateZLog('TfmNBSCCForm.FormActivate-if assigned(Self.FVCI) then-before-tarang');
   Self.SetBounds((Screen.Width - Self.Width) div 2, Screen.Height - Self.Height, Self.Width, Self.Height);
   if assigned(Self.FVCI) then
   begin
-    UpdateZLog('if assigned(Self.FVCI) then-tarang');
-    //showmessage('if assigned(Self.FVCI) then'); // madhu gv remove
     Self.ProcessVCI();
   end;
-   UpdateZLog('if assigned(Self.FVCI) then-after-tarang');
-    //showmessage('if assigned(Self.FVCI) then-after'); // madhu gv remove
 end;
 
 procedure TfmNBSCCForm.SetCurrentTransNo(const Value: integer);
@@ -2911,7 +2838,6 @@ function TfmNBSCCForm.PPCardStatusChange(Sender: TObject;
   const CardMediaType: TCardMediaType; const CardVersion: integer;
   const Trantype: TTranType; const CardStatus: TCardStatus): boolean;
 begin
-  UpdateZLog('Inside PPCardStatusChange : local');
   UpdateZLog('%s - %d, %d, %d, %d', [ProcByLevel, ord(CardMediaType), CardVersion, ord(Trantype), ord(CardStatus)]);
   if Self.Visible then
     if (CardMediaType = ctEMV) and (CardStatus = csInserted) then

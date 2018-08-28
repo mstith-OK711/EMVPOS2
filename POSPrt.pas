@@ -1614,7 +1614,6 @@ var
   sAccountType : string;
   tStr : string;
 begin
-  UpdateZLog('PrintEMVDeclined - enter');
   rcptSale.nTransNo := qClient^.CreditTransNo;
   nrcptShiftNo := nShiftNo;
   PrintLine(PrtBold + '*** Decline ***' + PrtMode);
@@ -1637,7 +1636,6 @@ begin
      PrintLine('PIN Verified');
   
   PrintSeq();
-  UpdateZLog('PrintEMVDeclined - exit');
 end;
 
 
@@ -1922,7 +1920,6 @@ var
      Result := rSult;
   end;
 begin
-  UpdateZLog('Inside PrintCCMess : local');
   PrintLine('');
 
   ccPtr^.CCCardNo := Trim(ccPtr^.CCCardNo);
@@ -1994,10 +1991,8 @@ begin
      EMV_PIN_VERIFIED := False;
      bSignatureRequired := Save_Sig_Required;
   end;
-  UpdateZLog('Checking fmPOS.OnlinePINVerified');
   if fmPOS.OnlinePINVerified = True then
   begin
-     UpdateZLog('fmPOS.OnlinePINVerified = True');
      bSignatureRequired := False;
      EMV_PIN_VERIFIED := True;
   end;
